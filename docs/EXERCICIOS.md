@@ -3,11 +3,12 @@
 Cada item tem **onde mexer**, **o que fazer** e **como saber que deu certo**. Comece pelo teste sempre que possível:
 escreva o teste que falha, depois o código que faz ele passar.
 
-## 1. Validar o dígito verificador do CPF (comece por aqui)
+## 1. Validar o dígito verificador do CPF (concluído)
 
 **Onde:** `backend/src/main/java/br/com/ocravanade/validacao/ValidadorDocumento.java`, método `cpf` (linha 48).
 
-Hoje a regra só confere se existem 11 dígitos. `111.111.111-11` passa, e não deveria.
+Feito em `validacao/Cpf.java`, com testes em `CpfTest` e `ValidadorDocumentoTest`. Antes, a regra só conferia se existiam
+11 dígitos e `111.111.111-11` passava.
 
 **Dica:** os dois últimos dígitos são calculados a partir dos nove primeiros (pesos de 10 a 2 para o primeiro
 dígito, de 11 a 2 para o segundo, resto da divisão por 11). CPFs com todos os dígitos iguais são inválidos.
@@ -15,7 +16,7 @@ dígito, de 11 a 2 para o segundo, resto da divisão por 11). CPFs com todos os 
 **Pronto quando:** um teste novo em `ValidadorDocumentoTest` mostra que `12345678909` passa e `12345678900` e
 `11111111111` reprovam.
 
-## 2. Cidade e UF não aparecem no PDF
+## 2. Cidade e UF não aparecem no PDF (próximo)
 
 **Onde:** `backend/src/main/java/br/com/ocravanade/extracao/ExtratorRegex.java`, padrão `CIDADE_UF` (linha 22).
 

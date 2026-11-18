@@ -45,7 +45,7 @@ Começamos com um único tipo de documento de propósito: é o menor escopo que 
 |---|---|---|
 | Documento legível | O OCR extrai texto suficiente | Imagem borrada, cortada ou escura |
 | Nome encontrado | Existe um nome de titular | Nome ausente |
-| CPF encontrado | Existe um CPF com 11 dígitos | CPF ausente ou incompleto |
+| CPF válido | CPF com 11 dígitos e dígito verificador correto | CPF ausente, incompleto ou com dígito verificador errado (sinal de leitura errada do OCR) |
 | Endereço encontrado | Existe endereço | Endereço ausente |
 | Emissão recente | Emitido nos últimos 90 dias | Mais antigo que 90 dias, sem data, ou data no futuro |
 
