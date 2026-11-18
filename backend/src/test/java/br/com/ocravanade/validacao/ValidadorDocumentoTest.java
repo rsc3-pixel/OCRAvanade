@@ -69,6 +69,28 @@ class ValidadorDocumentoTest {
 
 		assertThat(resultado.regras()).filteredOn(r -> !r.aprovada())
 				.extracting(RegraAplicada::regra)
-				.containsExactly("Nome encontrado", "CPF encontrado", "Endereço encontrado");
+				.containsExactly("Nome encontrado", "CPF válido", "Endereço encontrado");
+	}
+
+	@Test
+	void reprovaCpfComDigitoVerificadorErrado() {
+		DadosDocumento dados = new DadosDocumento("João da Silva", "12345678900", "Rua das Flores, 150", "Guanambi", "BA", HOJE);
+
+		ResultadoValidacao resultado = validador.validar(TEXTO_LEGIVEL, dados);
+
+		assertThat(resultado.aprovado()).isFalse();
+		assertThat(resultado.regras()).filteredOn(r -> !r.aprovada())
+				.singleElement()
+				.satisfies(r -> {
+					assertThat(r.regra()).isEqualTo("CPF válido");
+					assertThat(r.detalhe()).contains("dígito verificador");
+				});
+	}
+
+	@Test
+	void reprovaCpfComTodosOsDigitosIguais() {
+		DadosDocumento dados = new DadosDocumento("João da Silva", "11111111111", "Rua das Flores, 150", "Guanambi", "BA", HOJE);
+
+		assertThat(validador.validar(TEXTO_LEGIVEL, dados).aprovado()).isFalse();
 	}
 }

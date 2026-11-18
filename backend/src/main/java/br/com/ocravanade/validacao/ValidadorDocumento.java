@@ -46,8 +46,12 @@ public class ValidadorDocumento {
 	}
 
 	private RegraAplicada cpf(String cpf) {
-		boolean ok = cpf != null && cpf.matches("\\d{11}");
-		return new RegraAplicada("CPF encontrado", ok, ok ? mascarar(cpf) : "CPF ausente ou incompleto");
+		if (!Cpf.formatoValido(cpf)) {
+			return new RegraAplicada("CPF válido", false, "CPF ausente ou incompleto");
+		}
+		boolean ok = Cpf.valido(cpf);
+		return new RegraAplicada("CPF válido", ok, ok ? Cpf.mascarar(cpf)
+				: "CPF " + Cpf.mascarar(cpf) + " com dígito verificador inválido. Confira se a imagem está nítida");
 	}
 
 	private RegraAplicada emissaoRecente(LocalDate emissao) {
@@ -63,10 +67,5 @@ public class ValidadorDocumento {
 		boolean ok = dias <= validadeDias;
 		return new RegraAplicada(regra, ok,
 				ok ? "Emitido há " + dias + " dias" : "Documento antigo: emitido há " + dias + " dias");
-	}
-
-	/** Nunca devolver o CPF completo na resposta: 123.***.***-09 */
-	private static String mascarar(String cpf) {
-		return cpf.substring(0, 3) + ".***.***-" + cpf.substring(9);
 	}
 }
