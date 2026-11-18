@@ -5,6 +5,7 @@
   --marca: #0b5e55;
   --marca-forte: #084a43;
   --marca-suave: #e3f2ef;
+  --sobre-marca: #ffffff;
   --destaque: #f2a93b;
   --logo-papel: #f4fbf9;
   --logo-dobra: #cfe9e3;
@@ -33,6 +34,7 @@
     --marca: #3fb8a5;
     --marca-forte: #6fd1c1;
     --marca-suave: #12322e;
+    --sobre-marca: #06201c;
     --logo-papel: #e8f6f3;
     --logo-dobra: #a9d9cf;
 
@@ -223,7 +225,7 @@ select {
 
 .etapa--atual .etapa__numero {
   background: var(--marca);
-  color: #fff;
+  color: var(--sobre-marca);
   box-shadow: 0 0 0 4px var(--marca-suave);
 }
 
@@ -382,7 +384,7 @@ select {
 
 .botao--primario {
   background: var(--marca);
-  color: #fff;
+  color: var(--sobre-marca);
 }
 
 .botao--primario:not(:disabled):hover {
