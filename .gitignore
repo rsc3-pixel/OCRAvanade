@@ -16,3 +16,6 @@ Thumbs.db
 # Segredos
 .env
 *.local
+
+CLAUDE.local.md
+.claude/settings.local.json
