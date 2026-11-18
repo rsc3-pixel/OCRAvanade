@@ -5,6 +5,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.imageio.ImageIO;
 import nu.pattern.OpenCV;
 import org.opencv.core.Core;
@@ -13,6 +16,7 @@ import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -39,15 +43,17 @@ public class PreProcessadorImagem {
 		Mat cinza = new Mat();
 		Imgproc.cvtColor(colorida, cinza, Imgproc.COLOR_BGR2GRAY);
 
-		Mat ampliada = ampliarSePequena(cinza);
-
+		// Filtra o ruído ANTES de ampliar: ampliar primeiro aumentaria os pontinhos junto com as letras.
 		Mat semRuido = new Mat();
-		Imgproc.medianBlur(ampliada, semRuido, 3);
+		Imgproc.medianBlur(cinza, semRuido, 3);
+		Mat ampliada = ampliarSePequena(semRuido);
 
 		// Limiar adaptativo: decide preto/branco por vizinhança, então sombra num canto não apaga o texto.
 		Mat pretoBranco = new Mat();
-		Imgproc.adaptiveThreshold(semRuido, pretoBranco, 255,
+		Imgproc.adaptiveThreshold(ampliada, pretoBranco, 255,
 				Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 31, 15);
+		// Segunda limpeza: some com pontos isolados que sobreviveram ao limiar.
+		Imgproc.medianBlur(pretoBranco, pretoBranco, 3);
 
 		return paraBufferedImage(corrigirRotacao(pretoBranco));
 	}
@@ -63,22 +69,14 @@ public class PreProcessadorImagem {
 	}
 
 	/**
-	 * Acha o menor retângulo que envolve todos os pixels de texto e lê o ângulo dele.
-	 * Se o retângulo está inclinado, a foto está torta: giramos de volta.
+	 * Mede a inclinação pelas linhas de texto:
+	 * 1. borra na horizontal para cada linha de texto virar um "bloco" comprido;
+	 * 2. ignora blocos curtos (ruído, manchas);
+	 * 3. usa a mediana dos ângulos, que não se deixa levar por um bloco esquisito.
+	 * Se as linhas estão inclinadas, a foto está torta: giramos de volta.
 	 */
 	private static Mat corrigirRotacao(Mat pretoBranco) {
-		Mat invertida = new Mat();
-		Core.bitwise_not(pretoBranco, invertida);
-		MatOfPoint pontosTexto = new MatOfPoint();
-		Core.findNonZero(invertida, pontosTexto);
-		if (pontosTexto.empty()) {
-			return pretoBranco;
-		}
-
-		double angulo = Imgproc.minAreaRect(new MatOfPoint2f(pontosTexto.toArray())).angle;
-		if (angulo > 45) {
-			angulo -= 90;
-		}
+		double angulo = inclinacaoDasLinhas(pretoBranco);
 		if (Math.abs(angulo) < 0.3 || Math.abs(angulo) > ANGULO_MAXIMO) {
 			return pretoBranco;
 		}
@@ -89,6 +87,40 @@ public class PreProcessadorImagem {
 		Imgproc.warpAffine(pretoBranco, endireitada, rotacao, pretoBranco.size(),
 				Imgproc.INTER_CUBIC, Core.BORDER_REPLICATE);
 		return endireitada;
+	}
+
+	private static double inclinacaoDasLinhas(Mat pretoBranco) {
+		Mat texto = new Mat();
+		Core.bitwise_not(pretoBranco, texto);
+		Size pincel = new Size(Math.max(15, pretoBranco.cols() / 40), 3);
+		Imgproc.dilate(texto, texto, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, pincel));
+
+		List<MatOfPoint> blocos = new ArrayList<>();
+		Imgproc.findContours(texto, blocos, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+		double larguraMinima = pretoBranco.cols() * 0.15;
+		List<Double> angulos = new ArrayList<>();
+		for (MatOfPoint bloco : blocos) {
+			RotatedRect r = Imgproc.minAreaRect(new MatOfPoint2f(bloco.toArray()));
+			double comprimento = Math.max(r.size.width, r.size.height);
+			double altura = Math.min(r.size.width, r.size.height);
+			if (comprimento < larguraMinima || comprimento < altura * 5) {
+				continue;
+			}
+			// O OpenCV mede o ângulo de um lado qualquer do retângulo; normalizamos para o lado comprido.
+			double angulo = r.size.width >= r.size.height ? r.angle : r.angle - 90;
+			if (angulo > 45) {
+				angulo -= 90;
+			} else if (angulo < -45) {
+				angulo += 90;
+			}
+			angulos.add(angulo);
+		}
+		if (angulos.isEmpty()) {
+			return 0;
+		}
+		Collections.sort(angulos);
+		return angulos.get(angulos.size() / 2);
 	}
 
 	private static Mat paraMat(BufferedImage imagem) {
