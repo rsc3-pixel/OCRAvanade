@@ -11,11 +11,15 @@ COPY src src
 RUN ./mvnw -B -ntp package -DskipTests
 
 # ---------- Estágio 2: imagem final, só com o necessário para rodar ----------
-FROM eclipse-temurin:21-jre-noble
+# Debian 13 e não Ubuntu 24.04: o Tess4J 5.21 chama funções da Leptonica 1.84+, e o Ubuntu 24.04 só tem a 1.82
+# (erro "undefined symbol: pixBackgroundNormTo1MinMax"). O Debian 13 traz Leptonica 1.84 e Tesseract 5.5.
+FROM debian:trixie-slim
 
-# Tesseract + modelo de português. O libtesseract-dev cria o link "libtesseract.so" que o Tess4J procura.
+# Java 21 (só o runtime) + Tesseract + modelo de português.
+# O libtesseract-dev cria o link "libtesseract.so" que o Tess4J procura.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-por libtesseract-dev \
+    && apt-get install -y --no-install-recommends openjdk-21-jre-headless \
+       tesseract-ocr tesseract-ocr-por libtesseract-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
