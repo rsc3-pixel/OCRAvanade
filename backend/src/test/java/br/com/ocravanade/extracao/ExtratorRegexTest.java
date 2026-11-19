@@ -86,6 +86,20 @@ class ExtratorRegexTest {
 	}
 
 	@Test
+	void cidadeEUfComBordaDaPaginaLidaPeloOcr() {
+		String textoLidoDoPdfDeAmostra = """
+				Endereco: Rua das Flores, 150
+				Recife - PE |
+				Data de emissao: 10/11/2026
+				""";
+
+		DadosDocumento dados = extrator.extrair(textoLidoDoPdfDeAmostra);
+
+		assertThat(dados.cidade()).isEqualTo("Recife");
+		assertThat(dados.estado()).isEqualTo("PE");
+	}
+
+	@Test
 	void devolveNullQuandoNaoEncontra() {
 		DadosDocumento dados = extrator.extrair("texto qualquer sem campos");
 

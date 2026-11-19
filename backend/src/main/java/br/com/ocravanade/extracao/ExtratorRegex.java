@@ -23,7 +23,9 @@ public class ExtratorRegex implements ExtratorDados {
 	private static final Pattern ENDERECO = rotulo("endere[cç]o");
 	private static final Pattern CEP_CIDADE_UF = Pattern.compile(
 			"^[ \\t]*\\d{5}-?\\d{3}[ \\t]+([\\p{L} .']+?)[ \\t]+([A-Z]{2})[ \\t]*$", Pattern.MULTILINE);
-	private static final Pattern CIDADE_UF = Pattern.compile("^\\s*([\\p{L} .']{2,}?)\\s*[-/]\\s*([A-Z]{2})\\s*$", Pattern.MULTILINE);
+	/** O "|" no fim é a borda da página lida pelo OCR. */
+	private static final Pattern CIDADE_UF = Pattern.compile(
+			"^\\s*([\\p{L} .']{2,}?)\\s*[-/]\\s*([A-Z]{2})[ \\t|]*$", Pattern.MULTILINE);
 	private static final Pattern DATA_EMISSAO = Pattern.compile(
 			"(?:data\\s+de\\s+emiss[aã]o|emiss[aã]o|emitido\\s+em)\\s*[:\\-]?\\s*(\\d{2}/\\d{2}/\\d{4})", FLAGS);
 
