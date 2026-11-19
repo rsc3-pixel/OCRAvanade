@@ -47,6 +47,44 @@ class ExtratorRegexTest {
 		assertThat(dados.dataEmissao()).isEqualTo(LocalDate.of(2026, 11, 1));
 	}
 
+	/** Layout real de uma conta de luz (texto nativo do PDF), com dados pessoais trocados por fictícios. */
+	private static final String CONTA_DE_LUZ = """
+			 CLASSIFICAÇÃO: B1 RESIDENCIAL -RESIDENCIAL  TIPO DE FORNECIMENTO: Conv. Monômia - Monofásico
+			 NOME DO CLIENTE:
+			 MARIA DAS NEVES SOUZA
+			 CPF: 123.4**.***-**   \s
+			 ENDEREÇO:
+			 RUA DAS PALMEIRAS 100  AP-201
+			 EDIFICIO SOL NASCENTE
+			 CANDEIAS
+			 54440-000 JABOATAO DOS GUARARAPES PE
+			NÚMERO DA UNIDADE CONSUMIDORA
+			3.111.222.333-44
+			 NOTA FISCAL Nº 100200300 - SÉRIE 000 / DATA DE EMISSÃO: 28/10/2026
+			""";
+
+	@Test
+	void contaDeLuzComValorNaLinhaDeBaixoDoRotulo() {
+		DadosDocumento dados = extrator.extrair(CONTA_DE_LUZ);
+
+		assertThat(dados.nome()).isEqualTo("MARIA DAS NEVES SOUZA");
+		assertThat(dados.endereco()).isEqualTo("RUA DAS PALMEIRAS 100 AP-201");
+		assertThat(dados.dataEmissao()).isEqualTo(LocalDate.of(2026, 10, 28));
+	}
+
+	@Test
+	void contaDeLuzComCidadeEUfDepoisDoCep() {
+		DadosDocumento dados = extrator.extrair(CONTA_DE_LUZ);
+
+		assertThat(dados.cidade()).isEqualTo("JABOATAO DOS GUARARAPES");
+		assertThat(dados.estado()).isEqualTo("PE");
+	}
+
+	@Test
+	void naoConfundeOutroNumeroComCpfQuandoOCpfEstaMascarado() {
+		assertThat(extrator.extrair(CONTA_DE_LUZ).cpf()).isNull();
+	}
+
 	@Test
 	void devolveNullQuandoNaoEncontra() {
 		DadosDocumento dados = extrator.extrair("texto qualquer sem campos");
