@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * O maestro: chama cada etapa na ordem do slide.
  * preparar (OpenCV) -> ler (Tesseract) -> interpretar (Regex/IA) -> validar -> persistir.
+ * PDF que já traz texto pula OpenCV e Tesseract: o texto nativo é exato e não mistura as colunas.
  */
 @Service
 public class EnvioService {
@@ -48,9 +49,7 @@ public class EnvioService {
 	public EnvioResposta processar(byte[] conteudo, String nomeArquivo, TipoDocumento tipo) {
 		long inicio = System.currentTimeMillis();
 
-		BufferedImage original = conversor.paraImagem(conteudo, nomeArquivo);
-		BufferedImage tratada = preProcessador.tratar(original);
-		String texto = leitorOcr.ler(tratada);
+		String texto = conversor.textoNativo(conteudo, nomeArquivo).orElseGet(() -> lerPorOcr(conteudo, nomeArquivo));
 		DadosDocumento dados = extrator.extrair(texto);
 		ResultadoValidacao resultado = validador.validar(texto, dados);
 
@@ -58,6 +57,11 @@ public class EnvioService {
 				Envio.processado(nomeArquivo, tipo, extrator.nome(), texto, dados, resultado, relogio.instant()));
 		log.info("Envio {} processado em {} ms: {}", envio.getId(), System.currentTimeMillis() - inicio, envio.getStatus());
 		return EnvioResposta.de(envio);
+	}
+
+	private String lerPorOcr(byte[] conteudo, String nomeArquivo) {
+		BufferedImage original = conversor.paraImagem(conteudo, nomeArquivo);
+		return leitorOcr.ler(preProcessador.tratar(original));
 	}
 
 	@Transactional(readOnly = true)
