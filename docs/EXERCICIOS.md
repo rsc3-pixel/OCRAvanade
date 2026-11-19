@@ -16,7 +16,7 @@ dígito, de 11 a 2 para o segundo, resto da divisão por 11). CPFs com todos os 
 **Pronto quando:** um teste novo em `ValidadorDocumentoTest` mostra que `12345678909` passa e `12345678900` e
 `11111111111` reprovam.
 
-## 2. Cidade e UF não aparecem no PDF (próximo)
+## 2. Cidade e UF não aparecem no PDF (concluído)
 
 **Onde:** `backend/src/main/java/br/com/ocravanade/extracao/ExtratorRegex.java`, padrão `CIDADE_UF` (linha 22).
 
@@ -25,7 +25,11 @@ Envie `amostras/comprovante-aprovado.pdf` e abra "Ver texto lido pelo OCR" na te
 
 **Pronto quando:** o teste com o texto real lido do PDF extrai `Recife` e `PE`.
 
-## 3. Mostrar a imagem tratada pelo OpenCV
+Feito: o OCR lia a borda da página como `|` no fim da linha (`Recife - PE |`). Junto, o Regex passou a aceitar o
+layout de contas reais (valor na linha de baixo do rótulo, cidade e UF depois do CEP) e PDFs com texto deixaram de
+passar pelo OCR.
+
+## 3. Mostrar a imagem tratada pelo OpenCV (próximo)
 
 **Onde:** `PreProcessadorImagem.tratar` (já devolve a imagem), `EnvioService.processar` e a tela de resultado.
 

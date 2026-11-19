@@ -12,9 +12,12 @@ responde **Aprovado** ou **Reprovado**, mostrando o motivo de cada regra.
 Documento -> OpenCV -> Tesseract -> Regex ou IA -> Regras de negócio -> Postgres -> Resultado na tela
 ```
 
+PDF gerado por sistema (conta baixada do site) já traz o texto dentro: ele é lido direto e pula OpenCV e Tesseract.
+O OCR fica para foto e PDF escaneado.
+
 | Etapa | O que faz | Onde está |
 |---|---|---|
-| Conversão | PDF vira imagem a 300 DPI (PDFBox) | `backend/.../imagem/ConversorDocumento.java` |
+| Conversão | PDF com texto: lê o texto direto. Senão, PDF vira imagem a 300 DPI (PDFBox) | `backend/.../imagem/ConversorDocumento.java` |
 | OpenCV | Tons de cinza, remove ruído, amplia, preto e branco, corrige rotação | `backend/.../imagem/PreProcessadorImagem.java` |
 | Tesseract | Lê o texto em português | `backend/.../ocr/LeitorOcr.java` |
 | Extração | Texto vira campos (nome, CPF, endereço, cidade, UF, emissão) | `backend/.../extracao/` |
